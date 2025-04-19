@@ -27,6 +27,12 @@ import javax.net.ssl.HttpsURLConnection
 private lateinit var jsonReader : JsonReader
 private lateinit var myConnection : HttpsURLConnection
 
+data class ItemHolder (
+    var id: Int = 0,
+    var listId: Int = 0,
+    var name: String = ""
+)
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,45 +83,44 @@ fun connectToUrl(url: String) {
     }
 }
 
-fun getJsonReturnString(key: String): String {
-    var jsonReturnString: String = ""
 
-    //beginObject is key/value pair, beginArray is actual array.
+
+fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
+    var contentReturn = ArrayList<ItemHolder>()
     jsonReader.beginArray()
 
-    while(jsonReader.hasNext()) {
+    //Single array, multiple objects.
+    while (jsonReader.hasNext()) {
+        val itemHolder = ItemHolder()
         jsonReader.beginObject()
-        jsonReturnString += jsonReader.nextName()
-        break
+
+        while(jsonReader.hasNext()) {
+            val key = jsonReader.nextName()
+
+            if (key == "id") {
+                itemHolder.id = jsonReader.nextInt()
+            } else if (key == "listId") {3
+                itemHolder.listId = jsonReader.nextInt()
+            } else if (key == "name") {
+                itemHolder.name = jsonReader.nextString()
+                if (itemHolder.name != "") {
+                    contentReturn.add(itemHolder)
+                }
+//                if (jsonReader.peek() != JsonToken.NULL) {
+//
+//                }
+            } else {
+                jsonReader.skipValue()
+            }
+        }
+
+        contentReturn.add(itemHolder)
+        jsonReader.endObject()
+        println(contentReturn.toString())
     }
 
     jsonReader.close()
     myConnection.disconnect()
 
-    return jsonReturnString
-
-//    while (jsonReader.hasNext()) {
-//
-//        if (jsonReader.peek() == JsonToken.BEGIN_OBJECT) {
-//            println(jsonReader.beginObject())
-//            jsonReturnString += jsonReader.beginObject()
-//        }
-//        if (jsonReader.peek() == JsonToken.STRING) {
-//            println(jsonReader.nextString())
-//            jsonReturnString += jsonReader.nextString()
-//
-//        }
-//        if (jsonReader.peek() == JsonToken.NUMBER) {
-//            println(jsonReader.nextInt())
-//            jsonReturnString += jsonReader.nextInt()
-//
-//        }
-//        if (jsonReader.peek() == JsonToken.NAME) {
-//            println(jsonReader.nextName())
-//            jsonReturnString += jsonReader.nextName()
-//
-//        }
-//
-//        println(jsonReturnString)
-//    }
+    return contentReturn
 }
