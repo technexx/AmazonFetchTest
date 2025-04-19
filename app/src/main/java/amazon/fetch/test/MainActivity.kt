@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import amazon.fetch.test.ui.theme.AmazonFetchTestTheme
 import android.util.JsonReader
+import android.util.JsonToken
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import kotlinx.coroutines.Dispatchers
@@ -69,10 +70,8 @@ fun connectToUrl(url: String) {
 
         jsonReader = JsonReader(responseReader)
 
-//            assignJsonReturnString("feeds_url")
-
         Log.i("testConnect", "response code 200 received!")
-        Log.i("return", "$jsonReader")
+        println("return is ${getJsonReturnString("")}")
     } else {
         Log.i("testConnect", "response code 200 NOT received")
     }
@@ -80,17 +79,43 @@ fun connectToUrl(url: String) {
 
 fun getJsonReturnString(key: String): String {
     var jsonReturnString: String = ""
-    jsonReader.beginObject()
 
-    while (jsonReader.hasNext()) {
-//        val value = jsonReader.nextName()
-//        if (key == value) {
-//            jsonReturnString = jsonReader.nextString()
-//            break
-//        } else jsonReader.skipValue()
+    //beginObject is key/value pair, beginArray is actual array.
+    jsonReader.beginArray()
+
+    while(jsonReader.hasNext()) {
+        jsonReader.beginObject()
+        jsonReturnString += jsonReader.nextName()
+        break
     }
+
+    jsonReader.close()
+    myConnection.disconnect()
+
     return jsonReturnString
 
-//    jsonReader.close()
-//    myConnection.disconnect()
+//    while (jsonReader.hasNext()) {
+//
+//        if (jsonReader.peek() == JsonToken.BEGIN_OBJECT) {
+//            println(jsonReader.beginObject())
+//            jsonReturnString += jsonReader.beginObject()
+//        }
+//        if (jsonReader.peek() == JsonToken.STRING) {
+//            println(jsonReader.nextString())
+//            jsonReturnString += jsonReader.nextString()
+//
+//        }
+//        if (jsonReader.peek() == JsonToken.NUMBER) {
+//            println(jsonReader.nextInt())
+//            jsonReturnString += jsonReader.nextInt()
+//
+//        }
+//        if (jsonReader.peek() == JsonToken.NAME) {
+//            println(jsonReader.nextName())
+//            jsonReturnString += jsonReader.nextName()
+//
+//        }
+//
+//        println(jsonReturnString)
+//    }
 }
