@@ -102,13 +102,17 @@ fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
             } else if (key == "listId") {3
                 itemHolder.listId = jsonReader.nextInt()
             } else if (key == "name") {
-                itemHolder.name = jsonReader.nextString()
-                if (itemHolder.name != "") {
-                    contentReturn.add(itemHolder)
-                }
-//                if (jsonReader.peek() != JsonToken.NULL) {
-//
-//                }
+                if (jsonReader.peek() == JsonToken.NULL) {
+                    jsonReader.nextNull()
+                    //If null, blank out the name so we can filter out both conditions at once.
+                    itemHolder.name = ""
+                } else {
+                    itemHolder.name = jsonReader.nextString()
+                    //If name is not blank or null, add data class to its array, otherwise filter it out.
+                    if (itemHolder.name.isNotEmpty()) {
+                        contentReturn.add(itemHolder)
+                    }
+            }
             } else {
                 jsonReader.skipValue()
             }
@@ -116,9 +120,11 @@ fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
 
         contentReturn.add(itemHolder)
         jsonReader.endObject()
-        println(contentReturn.toString())
     }
 
+    for (i in contentReturn) {
+        println(i)
+    }
     jsonReader.close()
     myConnection.disconnect()
 
