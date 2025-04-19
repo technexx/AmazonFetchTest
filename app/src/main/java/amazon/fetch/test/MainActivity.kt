@@ -77,7 +77,8 @@ fun connectToUrl(url: String) {
         jsonReader = JsonReader(responseReader)
 
         Log.i("testConnect", "response code 200 received!")
-        println("return is ${getJsonReturnString("")}")
+        getJsonReturnString("")
+//        println("return is ${getJsonReturnString("")}")
     } else {
         Log.i("testConnect", "response code 200 NOT received")
     }
@@ -108,17 +109,18 @@ fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
                     itemHolder.name = ""
                 } else {
                     itemHolder.name = jsonReader.nextString()
-                    //If name is not blank or null, add data class to its array, otherwise filter it out.
-                    if (itemHolder.name.isNotEmpty()) {
-                        contentReturn.add(itemHolder)
-                    }
             }
             } else {
                 jsonReader.skipValue()
             }
         }
 
-        contentReturn.add(itemHolder)
+        //If name is not blank or null, add data class to its array, otherwise filter it out.
+        if (itemHolder.name.isNotEmpty()) {
+//            println("itemHolder name is ${itemHolder.name}")
+            contentReturn.add(itemHolder)
+        }
+
         jsonReader.endObject()
     }
 
