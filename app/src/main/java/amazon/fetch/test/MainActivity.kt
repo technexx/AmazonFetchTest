@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import amazon.fetch.test.ui.theme.AmazonFetchTestTheme
+import android.content.ClipData.Item
 import android.util.JsonReader
 import android.util.JsonToken
 import android.util.Log
@@ -84,8 +85,6 @@ fun connectToUrl(url: String) {
     }
 }
 
-
-
 fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
     var contentReturn = ArrayList<ItemHolder>()
     jsonReader.beginArray()
@@ -124,11 +123,15 @@ fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
         jsonReader.endObject()
     }
 
-    for (i in contentReturn) {
+    for (i in contentListSortedByListIds( contentReturn)) {
         println(i)
     }
     jsonReader.close()
     myConnection.disconnect()
 
     return contentReturn
+}
+
+fun contentListSortedByListIds(contentList: List<ItemHolder>): List<ItemHolder> {
+    return contentList.sortedBy { it.listId }
 }
