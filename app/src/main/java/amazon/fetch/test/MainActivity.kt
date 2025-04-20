@@ -32,7 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
@@ -64,24 +66,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AmazonFetchTestTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Surface {
-                        Column(
-                            modifier = Modifier
-                                .padding(innerPadding),
-                        ) {
-                            MainComposable()
-                        }
-                        runBlocking {
-                            launch {
-                                //Ui on main thread!
+                Surface {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        MainComposable()
+                    }
+                    runBlocking {
+                        launch {
+                            //Ui on main thread!
 
-                                //Running on separate thread.
-                                withContext(Dispatchers.IO) {
-//                                    getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
-                                }
-                                //Runs once networkPart() finishes
+                            //Running on separate thread.
+                            withContext(Dispatchers.IO) {
                             }
+                            //Runs once networkPart() finishes
                         }
                     }
                 }
@@ -92,11 +91,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainComposable() {
+    //Simple remembering state so our list updates as it's retrieved
     var dataList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
-
         isLoading = true
         try {
             val result = withContext(Dispatchers.IO) {
@@ -110,9 +109,11 @@ fun MainComposable() {
         }
     }
 
-    Column {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(colorResource(R.color.grey_200))
+    ) {
         ListDisplay(dataList)
-        println("displaying list")
     }
 
 }
@@ -121,38 +122,45 @@ fun MainComposable() {
 fun ListDisplay(list: List<ItemHolder>) {
     LazyColumn (
         modifier = Modifier
-            .height(200.dp)
             .fillMaxWidth()
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         items (list.size) { index ->
             Column {
-                Text(
-                    modifier = Modifier
-//                            .shadow(6.dp)
-                        .background(
-                            colorResource(R.color.teal_200),
-                            shape = RoundedCornerShape(5.dp)
-                        )
-                        .padding(8.dp),
-                    fontSize = 20.sp,
-                    color = colorResource(R.color.black),
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        shadow = Shadow(
-                            color = colorResource(R.color.white), offset = Offset(3.0f, 6.0f), blurRadius = 1f
-                        )
-                    ),
-                    text = list[index].name
-                )
+                CustomTextView("$index:")
+                CustomTextView("id" + " " + list[index].id.toString())
+                CustomTextView("listId" + " " + list[index].listId.toString())
+                CustomTextView("name" + " " + list[index].name)
+
             }
         }
     }
 }
 
+@Composable
+fun CustomTextView(text: String) {
+    Text(
+        modifier = Modifier
+            .shadow(6.dp)
+            .background(
+                colorResource(R.color.white),
+                shape = RoundedCornerShape(5.dp)
+            )
+            .padding(8.dp),
+        fontSize = 20.sp,
+        color = colorResource(R.color.black),
+        style = TextStyle(
+            fontSize = 24.sp,
+            shadow = Shadow(
+                color = colorResource(R.color.white), offset = Offset(3.0f, 6.0f), blurRadius = 1f
+            )
+        ),
+        text = text
+    )
+}
 
-suspend fun getJsonReturnString(url: String): List<ItemHolder> {
+fun getJsonReturnString(url: String): List<ItemHolder> {
     connectToUrl(url)
 
     var contentReturn = mutableListOf<ItemHolder>()
