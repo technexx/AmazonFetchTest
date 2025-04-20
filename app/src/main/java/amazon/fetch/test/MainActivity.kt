@@ -126,7 +126,7 @@ fun getJsonReturnString(url: String): List<ItemHolder> {
 
     contentReturn = sortedByListIds(contentReturn).toMutableList()
     contentReturn = sortedByNameWithinListIds(contentReturn).toMutableList()
-    contentReturn = sortedNameByItsIntegerValues(contentReturn).toMutableList()
+    contentReturn = itemHolderListSortedByNameNumericValues(contentReturn).toMutableList()
 
     jsonReader.close()
     myConnection.disconnect()
@@ -134,32 +134,8 @@ fun getJsonReturnString(url: String): List<ItemHolder> {
     return contentReturn
 }
 
-fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
-    return contentList.sortedBy { it.listId }
-}
-
-fun sortedNameByItsIntegerValues(itemHolderList: List<ItemHolder>): List<ItemHolder> {
-    val stringArray = ArrayList<String>()
-    val numberArray = ArrayList<Int>()
-    val numberStringsArray = ArrayList<String>()
-
-    for (i in itemHolderList) {
-        val splitName = i.name.split(" ")
-        stringArray.add(splitName[0])
-        numberArray.add(splitName[1].toInt())
-
-        i.name = splitName[1]
-    }
-
-    //TODO: This re-sorts entire list. we just want the sub (listId) lists sorted individually.
-    val sortedItemHolderList = itemHolderList.sortedBy { it.name.toInt() }
-
-    return itemHolderList
-
-}
-
 fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
-    val temporaryContentList = mutableListOf<ItemHolder>()
+    var temporaryContentList = mutableListOf<ItemHolder>()
     val newContentList = mutableListOf<ItemHolder>()
     var previousListId = contentList[0].listId
     val lastObject = contentList.lastOrNull()
@@ -171,7 +147,8 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
         }
         //If listId has changed OR we're at the end of our loop, it means we're done with the listId group and can sort our temporary list it by name.
         if (previousListId != currentObject.listId || currentObject == lastObject) {
-            temporaryContentList.sortedBy { it.name }
+            //Since we're sorting by names within each listId, we call this sort method before re-adding our temporary list to our full one.
+            temporaryContentList = itemHolderListSortedByNameNumericValues(temporaryContentList).toMutableList()
             //Adding sorted temporary list into our full list of the ItemHolder data class, then clearing it for the next listId and adding the first instance of the next listId.
             newContentList.addAll(temporaryContentList)
             temporaryContentList.clear()
@@ -180,9 +157,30 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
 
         //Set our previous listId to the one we're iterating through.
         previousListId = currentObject.listId
+    }
 
-
+    for (i in newContentList) {
+        println("$i")
     }
 
     return newContentList
+}
+
+fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
+    return contentList.sortedBy { it.listId }
+}
+
+fun itemHolderListSortedByNameNumericValues(itemHolderList: List<ItemHolder>): List<ItemHolder> {
+    val stringArray = ArrayList<String>()
+    val numberArray = ArrayList<Int>()
+
+    for (i in itemHolderList) {
+        val splitName = i.name.split(" ")
+        stringArray.add(splitName[0])
+        numberArray.add(splitName[1].toInt())
+
+        i.name = splitName[1]
+    }
+
+    return itemHolderList.sortedBy { it.name.toInt() }
 }
