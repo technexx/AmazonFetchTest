@@ -85,8 +85,8 @@ fun connectToUrl(url: String) {
     }
 }
 
-fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
-    var contentReturn = ArrayList<ItemHolder>()
+fun getJsonReturnString(url: String): List<ItemHolder> {
+    var contentReturn = mutableListOf<ItemHolder>()
     jsonReader.beginArray()
 
     //Single array, multiple objects.
@@ -116,22 +116,59 @@ fun getJsonReturnString(url: String): ArrayList<ItemHolder> {
 
         //If name is not blank or null, add data class to its array, otherwise filter it out.
         if (itemHolder.name.isNotEmpty()) {
-//            println("itemHolder name is ${itemHolder.name}")
             contentReturn.add(itemHolder)
         }
 
+        //End of object. This will now loop back up to next object.
         jsonReader.endObject()
     }
 
-    for (i in contentListSortedByListIds( contentReturn)) {
-        println(i)
-    }
+    println("initial list size is ${contentReturn.size}")
+    contentReturn = sortedByListIds(contentReturn).toMutableList()
+    println("sorted by id list size is ${contentReturn.size}")
+    contentReturn = sortedByNameWithinListIds(contentReturn).toMutableList()
+    println("sorted by name list size is ${contentReturn.size}")
+
     jsonReader.close()
     myConnection.disconnect()
 
     return contentReturn
 }
 
-fun contentListSortedByListIds(contentList: List<ItemHolder>): List<ItemHolder> {
+fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
     return contentList.sortedBy { it.listId }
+}
+
+fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
+    for (i in contentList) {
+//        println("received list is $contentList")
+    }
+    val temporaryContentList = mutableListOf<ItemHolder>()
+    val newContentList = mutableListOf<ItemHolder>()
+    var previousListId = contentList[0].listId
+
+    for (currentObject in contentList) {
+        //If listID has not changed, add its data class to our temporary data class list.
+        if (previousListId == currentObject.listId) {
+            temporaryContentList.add(currentObject)
+//            println("added to temp list at $temporaryContentList")
+        } else {
+            //TODO: This does not trigger the final id because there's no further ID to mismatch
+            //If listId has changed, it means we're done with the listId group and can sort our temporary list it by name.
+            temporaryContentList.sortedBy { it.name }
+            //Adding sorted temporary list into our full list of the ItemHolder data class, then clearing it for the next listId and adding the first instance of the next listId.
+            newContentList.addAll(temporaryContentList)
+            temporaryContentList.clear()
+            temporaryContentList.add(currentObject)
+        }
+
+        //Set our previous listId to the one we're iterating through.
+        previousListId = currentObject.listId
+    }
+
+//    for (i in newContentList) {
+//        println("new list iterating at $i")
+//    }
+
+    return newContentList
 }
