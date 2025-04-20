@@ -25,6 +25,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
@@ -62,6 +67,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .padding(innerPadding),
                         ) {
+                            MainComposable()
 //                            ListDisplay(itemHolderList)
                         }
                         runBlocking {
@@ -72,7 +78,6 @@ class MainActivity : ComponentActivity() {
                                 withContext(Dispatchers.IO) {
                                     getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
                                 }
-
                                 //Runs once networkPart() finishes
                             }
                         }
@@ -81,6 +86,32 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+@Composable
+fun MainComposable() {
+    var dataList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    Column {
+        LaunchedEffect(key1 = Unit) {
+            // Simulate network query (replace with your actual network call)
+            try {
+                val fetchedData = getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
+                dataList = fetchedData
+                isLoading = false
+            } catch (e: Exception) {
+                // Handle error state
+                isLoading = false
+                println("Error fetching data: $e")
+            }
+        }
+
+        if (!isLoading) {
+            ListDisplay(dataList)
+        }
+    }
+
 }
 
 @Composable
@@ -160,7 +191,6 @@ fun getJsonReturnString(url: String): List<ItemHolder> {
 
     contentReturn = sortedByListIds(contentReturn).toMutableList()
     contentReturn = sortedByNameWithinListIds(contentReturn).toMutableList()
-    contentReturn = itemHolderListSortedByNameNumericValues(contentReturn).toMutableList()
 
     jsonReader.close()
     myConnection.disconnect()
@@ -211,10 +241,6 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
         previousListId = currentObject.listId
     }
 
-    for (i in newContentList) {
-        println("refined itemHolder list is $i")
-    }
-
     return newContentList
 }
 
@@ -228,6 +254,8 @@ fun itemHolderListSortedByNameNumericValues(itemHolderList: List<ItemHolder>): L
 
     for (i in itemHolderList) {
         val splitName = i.name.split(" ")
+//        println("split name is $splitName")
+        //TODO: Last item is ItemHolder(id=0, listId=1, name=0).
         stringArray.add(splitName[0])
         numberArray.add(splitName[1].toInt())
 
