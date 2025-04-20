@@ -16,6 +16,7 @@ import android.content.ClipData.Item
 import android.util.JsonReader
 import android.util.JsonToken
 import android.util.Log
+import android.util.Log.i
 import androidx.compose.foundation.layout.Column
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -123,11 +124,9 @@ fun getJsonReturnString(url: String): List<ItemHolder> {
         jsonReader.endObject()
     }
 
-    println("initial list size is ${contentReturn.size}")
     contentReturn = sortedByListIds(contentReturn).toMutableList()
-    println("sorted by id list size is ${contentReturn.size}")
     contentReturn = sortedByNameWithinListIds(contentReturn).toMutableList()
-    println("sorted by name list size is ${contentReturn.size}")
+    contentReturn = sortedNameByItsIntegerValues(contentReturn).toMutableList()
 
     jsonReader.close()
     myConnection.disconnect()
@@ -137,6 +136,26 @@ fun getJsonReturnString(url: String): List<ItemHolder> {
 
 fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
     return contentList.sortedBy { it.listId }
+}
+
+fun sortedNameByItsIntegerValues(itemHolderList: List<ItemHolder>): List<ItemHolder> {
+    val stringArray = ArrayList<String>()
+    val numberArray = ArrayList<Int>()
+    val numberStringsArray = ArrayList<String>()
+
+    for (i in itemHolderList) {
+        val splitName = i.name.split(" ")
+        stringArray.add(splitName[0])
+        numberArray.add(splitName[1].toInt())
+
+        i.name = splitName[1]
+    }
+
+    //TODO: This re-sorts entire list. we just want the sub (listId) lists sorted individually.
+    val sortedItemHolderList = itemHolderList.sortedBy { it.name.toInt() }
+
+    return itemHolderList
+
 }
 
 fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
@@ -161,10 +180,8 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
 
         //Set our previous listId to the one we're iterating through.
         previousListId = currentObject.listId
-    }
 
-    for (i in newContentList) {
-        println("new list iterating at $i")
+
     }
 
     return newContentList
