@@ -17,7 +17,21 @@ import android.util.JsonReader
 import android.util.JsonToken
 import android.util.Log
 import android.util.Log.i
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -28,6 +42,7 @@ import javax.net.ssl.HttpsURLConnection
 
 private lateinit var jsonReader : JsonReader
 private lateinit var myConnection : HttpsURLConnection
+private var itemHolderList: List<ItemHolder> = mutableListOf()
 
 data class ItemHolder (
     var id: Int = 0,
@@ -42,22 +57,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             AmazonFetchTestTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .padding(innerPadding),
-                    ) {
+                    Surface {
+                        Column(
+                            modifier = Modifier
+                                .padding(innerPadding),
+                        ) {
+//                            ListDisplay(itemHolderList)
+                        }
+                        runBlocking {
+                            launch {
+                                //Ui on main thread!
 
-                    }
-                    runBlocking {
-                        launch {
-                            //Ui on main thread!
+                                //Running on separate thread.
+                                withContext(Dispatchers.IO) {
+                                    getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
+                                }
 
-                            //Running on separate thread.
-                            withContext(Dispatchers.IO) {
-                                connectToUrl("https://fetch-hiring.s3.amazonaws.com/hiring.json")
+                                //Runs once networkPart() finishes
                             }
-
-                            //Runs one networkPart() finishes
                         }
                     }
                 }
@@ -66,27 +83,44 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun connectToUrl(url: String) {
-    val myUrl = URL(url)
-    myConnection = myUrl.openConnection() as HttpsURLConnection
-    myConnection.setRequestProperty("id", "object")
-
-    //If our query recipient likes us!
-    if (myConnection.responseCode == 200) {
-        val response = myConnection.inputStream
-        val responseReader = InputStreamReader(response, "UTF-8")
-
-        jsonReader = JsonReader(responseReader)
-
-        Log.i("testConnect", "response code 200 received!")
-        getJsonReturnString("")
-//        println("return is ${getJsonReturnString("")}")
-    } else {
-        Log.i("testConnect", "response code 200 NOT received")
+@Composable
+fun ListDisplay(list: List<ItemHolder>) {
+    LazyColumn (
+        modifier = Modifier
+            .height(200.dp)
+            .fillMaxWidth()
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        items (list.size) { index ->
+            Column {
+                Text(
+                    modifier = Modifier
+//                            .shadow(6.dp)
+                        .background(
+                            colorResource(R.color.teal_200),
+                            shape = RoundedCornerShape(5.dp)
+                        )
+                        .padding(8.dp),
+                    fontSize = 20.sp,
+                    color = colorResource(R.color.black),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        shadow = Shadow(
+                            color = colorResource(R.color.white), offset = Offset(3.0f, 6.0f), blurRadius = 1f
+                        )
+                    ),
+                    text = list[index].name
+                )
+            }
+        }
     }
 }
 
+
 fun getJsonReturnString(url: String): List<ItemHolder> {
+    connectToUrl(url)
+
     var contentReturn = mutableListOf<ItemHolder>()
     jsonReader.beginArray()
 
@@ -134,6 +168,24 @@ fun getJsonReturnString(url: String): List<ItemHolder> {
     return contentReturn
 }
 
+fun connectToUrl(url: String) {
+    val myUrl = URL(url)
+    myConnection = myUrl.openConnection() as HttpsURLConnection
+    myConnection.setRequestProperty("id", "object")
+
+    //If our query recipient likes us!
+    if (myConnection.responseCode == 200) {
+        val response = myConnection.inputStream
+        val responseReader = InputStreamReader(response, "UTF-8")
+
+        jsonReader = JsonReader(responseReader)
+
+        Log.i("testConnect", "response code 200 received!")
+    } else {
+        Log.i("testConnect", "response code 200 NOT received")
+    }
+}
+
 fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
     var temporaryContentList = mutableListOf<ItemHolder>()
     val newContentList = mutableListOf<ItemHolder>()
@@ -160,7 +212,7 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
     }
 
     for (i in newContentList) {
-        println("$i")
+        println("refined itemHolder list is $i")
     }
 
     return newContentList
