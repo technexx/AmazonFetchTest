@@ -140,21 +140,18 @@ fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
 }
 
 fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
-    for (i in contentList) {
-//        println("received list is $contentList")
-    }
     val temporaryContentList = mutableListOf<ItemHolder>()
     val newContentList = mutableListOf<ItemHolder>()
     var previousListId = contentList[0].listId
+    val lastObject = contentList.lastOrNull()
 
     for (currentObject in contentList) {
         //If listID has not changed, add its data class to our temporary data class list.
         if (previousListId == currentObject.listId) {
             temporaryContentList.add(currentObject)
-//            println("added to temp list at $temporaryContentList")
-        } else {
-            //TODO: This does not trigger the final id because there's no further ID to mismatch
-            //If listId has changed, it means we're done with the listId group and can sort our temporary list it by name.
+        }
+        //If listId has changed OR we're at the end of our loop, it means we're done with the listId group and can sort our temporary list it by name.
+        if (previousListId != currentObject.listId || currentObject == lastObject) {
             temporaryContentList.sortedBy { it.name }
             //Adding sorted temporary list into our full list of the ItemHolder data class, then clearing it for the next listId and adding the first instance of the next listId.
             newContentList.addAll(temporaryContentList)
@@ -166,9 +163,9 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
         previousListId = currentObject.listId
     }
 
-//    for (i in newContentList) {
-//        println("new list iterating at $i")
-//    }
+    for (i in newContentList) {
+        println("new list iterating at $i")
+    }
 
     return newContentList
 }
