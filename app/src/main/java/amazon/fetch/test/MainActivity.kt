@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
@@ -37,7 +38,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -47,7 +50,7 @@ import javax.net.ssl.HttpsURLConnection
 
 private lateinit var jsonReader : JsonReader
 private lateinit var myConnection : HttpsURLConnection
-private var itemHolderList: List<ItemHolder> = mutableListOf()
+private var itemHolderList: List<ItemHolder> = mutableListOf<ItemHolder>()
 
 data class ItemHolder (
     var id: Int = 0,
@@ -68,7 +71,6 @@ class MainActivity : ComponentActivity() {
                                 .padding(innerPadding),
                         ) {
                             MainComposable()
-//                            ListDisplay(itemHolderList)
                         }
                         runBlocking {
                             launch {
@@ -76,7 +78,7 @@ class MainActivity : ComponentActivity() {
 
                                 //Running on separate thread.
                                 withContext(Dispatchers.IO) {
-                                    getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
+//                                    getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
                                 }
                                 //Runs once networkPart() finishes
                             }
@@ -93,23 +95,24 @@ fun MainComposable() {
     var dataList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    Column {
-        LaunchedEffect(key1 = Unit) {
-            // Simulate network query (replace with your actual network call)
-            try {
-                val fetchedData = getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
-                dataList = fetchedData
-                isLoading = false
-            } catch (e: Exception) {
-                // Handle error state
-                isLoading = false
-                println("Error fetching data: $e")
-            }
-        }
+    LaunchedEffect(key1 = Unit) {
 
-        if (!isLoading) {
-            ListDisplay(dataList)
+        isLoading = true
+        try {
+            val result = withContext(Dispatchers.IO) {
+                getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
+            }
+            dataList = result
+        } catch (e: Exception) {
+            println("Failed to fetch data: ${e.message}")
+        } finally {
+            isLoading = false
         }
+    }
+
+    Column {
+        ListDisplay(dataList)
+        println("displaying list")
     }
 
 }
@@ -149,7 +152,7 @@ fun ListDisplay(list: List<ItemHolder>) {
 }
 
 
-fun getJsonReturnString(url: String): List<ItemHolder> {
+suspend fun getJsonReturnString(url: String): List<ItemHolder> {
     connectToUrl(url)
 
     var contentReturn = mutableListOf<ItemHolder>()
