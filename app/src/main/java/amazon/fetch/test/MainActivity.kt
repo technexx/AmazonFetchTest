@@ -1,6 +1,7 @@
 package amazon.fetch.test
 
 import amazon.fetch.test.ui.theme.AmazonFetchTestTheme
+import android.content.ClipData.Item
 import android.os.Bundle
 import android.util.JsonReader
 import android.util.JsonToken
@@ -12,9 +13,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.InputStreamReader
 import java.net.URL
@@ -49,7 +54,8 @@ import javax.net.ssl.HttpsURLConnection
 
 private lateinit var jsonReader : JsonReader
 private lateinit var myConnection : HttpsURLConnection
-private var itemHolderList: List<ItemHolder> = mutableListOf<ItemHolder>()
+private var fullListOfItemHolders: List<ItemHolder> = mutableListOf()
+private var listOfItemHoldersByListId: MutableList<List<ItemHolder>> = mutableListOf()
 
 data class ItemHolder (
     var id: Int = 0,
@@ -89,7 +95,6 @@ class MainActivity : ComponentActivity() {
                     .padding(innerPadding),
             ) {
                 ListIdTabs()
-                ItemList()
             }
         }
     }
@@ -110,20 +115,32 @@ fun ListIdTabs() {
             )
         }
     }
+
+    ItemList(tabIndex)
 }
 
 
 @Composable
-fun ItemList() {
+fun ItemList(tabIndex: Int) {
     //Simple remembering state so our list updates as it's retrieved.
     var updatedItemList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
 
+    if (updatedItemList.isNotEmpty()) {
+        when (tabIndex) {
+            0 -> updatedItemList = fullListOfItemHolders
+            1 -> updatedItemList = listOfItemHoldersByListId[0]
+            2 -> updatedItemList = listOfItemHoldersByListId[1]
+            3 -> updatedItemList = listOfItemHoldersByListId[2]
+            4-> updatedItemList = listOfItemHoldersByListId[3]
+        }
+    }
+
     LaunchedEffect(key1 = Unit) {
         try {
-            val fetchedItemList = withContext(Dispatchers.IO) {
+            fullListOfItemHolders = withContext(Dispatchers.IO) {
                 getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
             }
-            updatedItemList = fetchedItemList
+            updatedItemList = fullListOfItemHolders
         } catch (e: Exception) {
             println("Failed to fetch data: ${e.message}")
         }
@@ -170,6 +187,7 @@ fun ListDisplay(list: List<ItemHolder>) {
                     CustomTextView("id" + ": " + list[index].id.toString())
                 }
             }
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }
@@ -274,9 +292,12 @@ fun sortedByNameWithinListIds(contentList: MutableList<ItemHolder>): List<ItemHo
         if (previousListId != currentObject.listId || currentObject == lastObject) {
             //Since we're sorting by names within each listId, we call this sort method before re-adding our temporary list to our full one.
             temporaryContentList = itemHolderListSortedByNameNumericValues(temporaryContentList).toMutableList()
+            //Making sure we have a new copy of the list to avoid weird references.
+            listOfItemHoldersByListId.add(temporaryContentList.toList())
             //Adding sorted temporary list into our full list of the ItemHolder data class, then clearing it for the next listId and adding the first instance of the next listId.
             newContentList.addAll(temporaryContentList)
             temporaryContentList.clear()
+            //Adds the next ItemHolder, which now has a new listId, to the next temporary list we're creating.
             temporaryContentList.add(currentObject)
         }
 
