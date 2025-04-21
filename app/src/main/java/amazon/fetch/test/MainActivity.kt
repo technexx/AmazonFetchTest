@@ -60,45 +60,43 @@ class MainActivity : ComponentActivity() {
         setContent {
             AmazonFetchTestTheme {
                 MainLayout()
+            }
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainLayout() {
-    Scaffold(
-        modifier = Modifier,
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorResource(R.color.grey_800),
-                    titleContentColor = Color.White,
-                ),
-                title = {
-                    Text("Fetch Test!")
-                },
-            )
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding),
-        ) {
-            ItemList()
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun MainLayout() {
+        Scaffold(
+            modifier = Modifier,
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorResource(R.color.grey_800),
+                        titleContentColor = Color.White,
+                    ),
+                    title = {
+                        Text("Fetch Test!")
+                    },
+                )
+            },
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding),
+            ) {
+                ItemList()
+            }
         }
     }
-}
 }
 
 @Composable
 fun ItemList() {
     //Simple remembering state so our list updates as it's retrieved.
     var updatedItemList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
-        isLoading = true
         try {
             val fetchedItemList = withContext(Dispatchers.IO) {
                 getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
@@ -106,8 +104,6 @@ fun ItemList() {
             updatedItemList = fetchedItemList
         } catch (e: Exception) {
             println("Failed to fetch data: ${e.message}")
-        } finally {
-            isLoading = false
         }
     }
 
@@ -280,8 +276,6 @@ fun itemHolderListSortedByNameNumericValues(itemHolderList: List<ItemHolder>): L
 
     for (i in itemHolderList) {
         val splitName = i.name.split(" ")
-//        println("split name is $splitName")
-        //TODO: Last item is ItemHolder(id=0, listId=1, name=0).
         stringArray.add(splitName[0])
         numberArray.add(splitName[1].toInt())
 
