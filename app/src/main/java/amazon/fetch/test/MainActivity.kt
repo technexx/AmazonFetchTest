@@ -17,14 +17,28 @@ import android.util.JsonReader
 import android.util.JsonToken
 import android.util.Log
 import android.util.Log.i
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,27 +75,33 @@ data class ItemHolder (
 )
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
+
         setContent {
             AmazonFetchTestTheme {
-                Surface {
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    topBar = {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = colorResource(R.color.grey_800),
+                                titleContentColor = Color.White,
+                            ),
+                            title = {
+                                Text("Fetch Test!")
+                            },
+                        )
+                    },
+                ) { innerPadding ->
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .padding(innerPadding),
                     ) {
                         MainComposable()
-                    }
-                    runBlocking {
-                        launch {
-                            //Ui on main thread!
-
-                            //Running on separate thread.
-                            withContext(Dispatchers.IO) {
-                            }
-                            //Runs once networkPart() finishes
-                        }
                     }
                 }
             }
@@ -92,16 +112,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainComposable() {
     //Simple remembering state so our list updates as it's retrieved
-    var dataList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
+    var updatedItemList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
         isLoading = true
         try {
-            val result = withContext(Dispatchers.IO) {
+            val fetchedItemList = withContext(Dispatchers.IO) {
                 getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
             }
-            dataList = result
+            updatedItemList = fetchedItemList
         } catch (e: Exception) {
             println("Failed to fetch data: ${e.message}")
         } finally {
@@ -110,13 +130,11 @@ fun MainComposable() {
     }
 
     Column(modifier = Modifier
-        .fillMaxSize()
-        .background(colorResource(R.color.grey_200))
-    ) {
-        ListDisplay(dataList)
+        .background(colorResource(R.color.grey_300))) {
+        ListDisplay(updatedItemList)
     }
-
 }
+
 
 @Composable
 fun ListDisplay(list: List<ItemHolder>) {
@@ -127,7 +145,13 @@ fun ListDisplay(list: List<ItemHolder>) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         items (list.size) { index ->
-            Column {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .background(colorResource(R.color.grey_200))
+                .border(BorderStroke(2.dp, Color.Black)),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
                 CustomTextView("$index:")
                 CustomTextView("id" + " " + list[index].id.toString())
                 CustomTextView("listId" + " " + list[index].listId.toString())
@@ -142,11 +166,6 @@ fun ListDisplay(list: List<ItemHolder>) {
 fun CustomTextView(text: String) {
     Text(
         modifier = Modifier
-            .shadow(6.dp)
-            .background(
-                colorResource(R.color.white),
-                shape = RoundedCornerShape(5.dp)
-            )
             .padding(8.dp),
         fontSize = 20.sp,
         color = colorResource(R.color.black),
