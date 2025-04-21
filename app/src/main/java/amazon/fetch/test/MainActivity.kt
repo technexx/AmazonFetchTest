@@ -19,12 +19,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -85,11 +88,30 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .padding(innerPadding),
             ) {
+                ListIdTabs()
                 ItemList()
             }
         }
     }
 }
+
+@Composable
+fun ListIdTabs() {
+    val tabs = listOf("Full List", "ListID 1", "ListID 2", "ListID 3", "ListID 4")
+    var tabIndex by remember { mutableIntStateOf(0) }
+
+    TabRow(selectedTabIndex = tabIndex) {
+        tabs.forEachIndexed { index, title ->
+            Tab(text = { Text(title) },
+                selected = tabIndex == index,
+                onClick = {
+                    tabIndex = index
+                }
+            )
+        }
+    }
+}
+
 
 @Composable
 fun ItemList() {
@@ -135,18 +157,17 @@ fun ListDisplay(list: List<ItemHolder>) {
                 .border(BorderStroke(2.dp, Color.Black)),
             ) {
                 Column(modifier = Modifier
-                    .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    .fillMaxWidth()
                     ) {
-                    CustomTextView("$index:", 22, fontWeight = FontWeight.Bold)
+                    CustomTextView("$index", 24, fontWeight = FontWeight.Bold)
                 }
                 Column(modifier = Modifier
-                    .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    .fillMaxWidth()
+                    .padding(start = 2.dp),
                 ) {
-                    CustomTextView("id" + ": " + list[index].id.toString())
                     CustomTextView("listId" + ": " + list[index].listId.toString())
                     CustomTextView("name" + ": " + list[index].name)
+                    CustomTextView("id" + ": " + list[index].id.toString())
                 }
             }
         }
@@ -154,7 +175,7 @@ fun ListDisplay(list: List<ItemHolder>) {
 }
 
 @Composable
-fun CustomTextView(text: String, fontSize: Int = 20, fontWeight: FontWeight = FontWeight.Normal) {
+fun CustomTextView(text: String, fontSize: Int = 22, fontWeight: FontWeight = FontWeight.Normal) {
     Text(
         modifier = Modifier
             .padding(8.dp),
@@ -271,16 +292,21 @@ fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
 }
 
 fun itemHolderListSortedByNameNumericValues(itemHolderList: List<ItemHolder>): List<ItemHolder> {
-    val stringArray = ArrayList<String>()
-    val numberArray = ArrayList<Int>()
+    val nameStringList = mutableListOf<String>()
 
     for (i in itemHolderList) {
-        val splitName = i.name.split(" ")
-        stringArray.add(splitName[0])
-        numberArray.add(splitName[1].toInt())
-
-        i.name = splitName[1]
+        //Retaining first part of name String.
+        nameStringList.add(i.name.split(" 0")[0])
+        //Temporarily setting our name variable to its Int value so we can sort it.
+        i.name = i.name.split(" ")[1]
     }
 
-    return itemHolderList.sortedBy { it.name.toInt() }
+    itemHolderList.sortedBy { it.name.toInt() }
+
+    //Re-adding Item String.
+    for (i in itemHolderList) {
+        i.name = "Item " + i.name
+    }
+
+    return itemHolderList
 }
