@@ -11,7 +11,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,10 +52,8 @@ data class ItemHolder (
 )
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
         setContent {
             AmazonFetchTestTheme {
                 MainLayout()
@@ -69,8 +65,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainLayout() {
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -95,7 +90,7 @@ fun MainLayout() {
 
 @Composable
 fun ItemList() {
-    //Simple remembering state so our list updates as it's retrieved
+    //Simple remembering state so our list updates as it's retrieved.
     var updatedItemList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -146,8 +141,6 @@ fun ListDisplay(list: List<ItemHolder>) {
                     CustomTextView("listId" + ": " + list[index].listId.toString())
                     CustomTextView("name" + ": " + list[index].name)
                 }
-
-
             }
         }
     }
