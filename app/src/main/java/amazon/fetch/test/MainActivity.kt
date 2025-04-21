@@ -12,9 +12,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,29 +91,12 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .padding(innerPadding),
             ) {
-                ListIdTabs()
                 ItemList()
             }
         }
     }
 }
 
-@Composable
-fun ListIdTabs() {
-    val tabs = listOf("Full List", "ListID 1", "ListID 2", "ListID 3", "ListID 4")
-    var tabIndex by remember { mutableIntStateOf(0) }
-
-    TabRow(selectedTabIndex = tabIndex) {
-        tabs.forEachIndexed { index, title ->
-            Tab(text = { Text(title) },
-                selected = tabIndex == index,
-                onClick = {
-                    tabIndex = index
-                }
-            )
-        }
-    }
-}
 
 
 @Composable
@@ -170,6 +156,8 @@ fun ListDisplay(list: List<ItemHolder>) {
                     CustomTextView("id" + ": " + list[index].id.toString())
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
         }
     }
 }
