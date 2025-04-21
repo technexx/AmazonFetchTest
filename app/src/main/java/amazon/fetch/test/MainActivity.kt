@@ -1,64 +1,43 @@
 package amazon.fetch.test
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import amazon.fetch.test.ui.theme.AmazonFetchTestTheme
-import android.content.ClipData.Item
+import android.os.Bundle
 import android.util.JsonReader
 import android.util.JsonToken
 import android.util.Log
-import android.util.Log.i
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.InputStreamReader
 import java.net.URL
@@ -79,38 +58,43 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
-
         setContent {
             AmazonFetchTestTheme {
-                Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    topBar = {
-                        TopAppBar(
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = colorResource(R.color.grey_800),
-                                titleContentColor = Color.White,
-                            ),
-                            title = {
-                                Text("Fetch Test!")
-                            },
-                        )
-                    },
-                ) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .padding(innerPadding),
-                    ) {
-                        MainComposable()
-                    }
-                }
-            }
+                MainLayout()
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainComposable() {
+fun MainLayout() {
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(R.color.grey_800),
+                    titleContentColor = Color.White,
+                ),
+                title = {
+                    Text("Fetch Test!")
+                },
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding),
+        ) {
+            ItemList()
+        }
+    }
+}
+}
+
+@Composable
+fun ItemList() {
     //Simple remembering state so our list updates as it's retrieved
     var updatedItemList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -142,20 +126,27 @@ fun ListDisplay(list: List<ItemHolder>) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         items (list.size) { index ->
             Column(modifier = Modifier
-                .fillMaxWidth()
                 .background(colorResource(R.color.grey_200))
                 .border(BorderStroke(2.dp, Color.Black)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
-                CustomTextView("$index:")
-                CustomTextView("id" + " " + list[index].id.toString())
-                CustomTextView("listId" + " " + list[index].listId.toString())
-                CustomTextView("name" + " " + list[index].name)
+                Column(modifier = Modifier
+                    .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                    CustomTextView("$index:", 22, fontWeight = FontWeight.Bold)
+                }
+                Column(modifier = Modifier
+                    .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    CustomTextView("id" + ": " + list[index].id.toString())
+                    CustomTextView("listId" + ": " + list[index].listId.toString())
+                    CustomTextView("name" + ": " + list[index].name)
+                }
+
 
             }
         }
@@ -163,11 +154,12 @@ fun ListDisplay(list: List<ItemHolder>) {
 }
 
 @Composable
-fun CustomTextView(text: String) {
+fun CustomTextView(text: String, fontSize: Int = 20, fontWeight: FontWeight = FontWeight.Normal) {
     Text(
         modifier = Modifier
             .padding(8.dp),
-        fontSize = 20.sp,
+        fontSize = fontSize.sp,
+        fontWeight = fontWeight,
         color = colorResource(R.color.black),
         style = TextStyle(
             fontSize = 24.sp,
