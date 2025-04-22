@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -160,7 +162,6 @@ fun ItemList(tabIndex: Int) {
     }
 }
 
-
 @Composable
 fun ListDisplay(list: List<ItemHolder>) {
     LazyColumn (
@@ -175,28 +176,36 @@ fun ListDisplay(list: List<ItemHolder>) {
             ) {
                 Column(modifier = Modifier
                     .fillMaxWidth()
-                    ) {
+                ) {
                     CustomTextView("$index", 24, fontWeight = FontWeight.Bold)
                 }
                 Column(modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 2.dp),
+                    .padding(start = 6.dp),
                 ) {
-                    CustomTextView("listId" + ": " + list[index].listId.toString())
-                    CustomTextView("name" + ": " + list[index].name)
-                    CustomTextView("id" + ": " + list[index].id.toString())
+                    AlignedRow("listId" + ": ", list[index].listId.toString(), 70.dp)
+                    AlignedRow("name" + ": ", list[index].name, 70.dp)
+                    AlignedRow("id" + ": ", list[index].id.toString(), 70.dp)
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
         }
     }
 }
 
 @Composable
-fun CustomTextView(text: String, fontSize: Int = 22, fontWeight: FontWeight = FontWeight.Normal) {
+fun AlignedRow(key: String, value: String, widthSpacing: Dp) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        CustomTextView(key, modifier = Modifier.width(widthSpacing))
+        CustomTextView(value)
+    }
+}
+
+@Composable
+fun CustomTextView(text: String, fontSize: Int = 22, fontWeight: FontWeight = FontWeight.Normal, modifier: Modifier = Modifier.padding(6.dp)) {
     Text(
-        modifier = Modifier
-            .padding(8.dp),
+        modifier = modifier,
         fontSize = fontSize.sp,
         fontWeight = fontWeight,
         color = colorResource(R.color.black),
@@ -209,7 +218,6 @@ fun CustomTextView(text: String, fontSize: Int = 22, fontWeight: FontWeight = Fo
         text = text
     )
 }
-
 fun getJsonReturnString(url: String): List<ItemHolder> {
     connectToUrl(url)
 
