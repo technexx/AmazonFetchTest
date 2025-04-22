@@ -23,15 +23,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,7 +51,6 @@ import javax.net.ssl.HttpsURLConnection
 
 private lateinit var jsonReader : JsonReader
 private lateinit var myConnection : HttpsURLConnection
-private var itemHolderList: List<ItemHolder> = mutableListOf<ItemHolder>()
 
 data class ItemHolder (
     var id: Int = 0,
@@ -106,7 +102,7 @@ fun ItemList() {
     //Simple remembering state so our list updates as it's retrieved.
     var updatedItemList by remember { mutableStateOf<List<ItemHolder>>(emptyList()) }
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(Unit) {
         try {
             val fetchedItemList = withContext(Dispatchers.IO) {
                 getJsonReturnString("https://fetch-hiring.s3.amazonaws.com/hiring.json")
@@ -122,6 +118,7 @@ fun ItemList() {
         .background(colorResource(R.color.grey_300)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
+        //If our list hasn't loaded yet, show a progress indicator.
         if (updatedItemList.isEmpty()) {
             CircularProgressIndicator()
         }
@@ -151,7 +148,7 @@ fun ListDisplay(list: List<ItemHolder>) {
                 }
                 Column(modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 2.dp),
+                    .padding(start = 6.dp),
                 ) {
                     AlignedRow("listId" + ": ", list[index].listId.toString(), 70.dp)
                     AlignedRow("name" + ": ", list[index].name, 70.dp)
@@ -173,7 +170,7 @@ fun AlignedRow(key: String, value: String, widthSpacing: Dp) {
 }
 
 @Composable
-fun CustomTextView(text: String, fontSize: Int = 22, fontWeight: FontWeight = FontWeight.Normal, modifier: Modifier = Modifier.padding(8.dp)) {
+fun CustomTextView(text: String, fontSize: Int = 22, fontWeight: FontWeight = FontWeight.Normal, modifier: Modifier = Modifier.padding(6.dp)) {
     Text(
         modifier = modifier,
         fontSize = fontSize.sp,
@@ -288,22 +285,24 @@ fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
     return contentList.sortedBy { it.listId }
 }
 
-fun itemHolderListSortedByNameNumericValues(itemHolderList: List<ItemHolder>): List<ItemHolder> {
+fun itemHolderListSortedByNameNumericValues(list: List<ItemHolder>): List<ItemHolder> {
     val nameStringList = mutableListOf<String>()
 
-    for (i in itemHolderList) {
+    for (i in list) {
         //Retaining first part of name String.
         nameStringList.add(i.name.split(" 0")[0])
         //Temporarily setting our name variable to its Int value so we can sort it.
         i.name = i.name.split(" ")[1]
     }
 
-    itemHolderList.sortedBy { it.name.toInt() }
+    list.sortedBy { it.name.toInt() }
+
+    println("list is $list")
 
     //Re-adding Item String.
-    for (i in itemHolderList) {
+    for (i in list) {
         i.name = "Item " + i.name
     }
 
-    return itemHolderList
+    return list
 }
