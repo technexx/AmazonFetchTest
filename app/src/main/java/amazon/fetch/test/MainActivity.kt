@@ -312,19 +312,21 @@ fun sortedByListIds(contentList: MutableList<ItemHolder>): List<ItemHolder> {
     return contentList.sortedBy { it.listId }
 }
 
-fun itemHolderListSortedByNameNumericValues(itemHolderList: List<ItemHolder>): List<ItemHolder> {
+
+fun itemHolderListSortedByNameNumericValues(list: List<ItemHolder>): List<ItemHolder> {
     val nameStringList = mutableListOf<String>()
 
-    for (i in itemHolderList) {
+    for (i in list) {
         //Retaining first part of name String.
         nameStringList.add(i.name.split(" 0")[0])
         //Temporarily setting our name variable to its Int value so we can sort it.
         i.name = i.name.split(" ")[1]
     }
 
-    itemHolderList.sortedBy { it.name.toInt() }
+    //Copy of list so we can rejoin its name String below.
+    val itemHolderList: List<ItemHolder> = list.sortedBy { it.name.toInt() }
 
-    //Re-adding Item String.
+    //Re-adding "Item" String.
     for (i in itemHolderList) {
         i.name = "Item " + i.name
     }
