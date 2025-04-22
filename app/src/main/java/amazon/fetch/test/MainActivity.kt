@@ -1,6 +1,7 @@
 package amazon.fetch.test
 
 import amazon.fetch.test.ui.theme.AmazonFetchTestTheme
+import android.content.ClipData.Item
 import android.os.Bundle
 import android.util.JsonReader
 import android.util.JsonToken
@@ -295,14 +296,13 @@ fun itemHolderListSortedByNameNumericValues(list: List<ItemHolder>): List<ItemHo
         i.name = i.name.split(" ")[1]
     }
 
-    list.sortedBy { it.name.toInt() }
+    //Copy of list so we can rejoin its name String below.
+    val itemHolderList: List<ItemHolder> = list.sortedBy { it.name.toInt() }
 
-    println("list is $list")
-
-    //Re-adding Item String.
-    for (i in list) {
+    //Re-adding "Item" String.
+    for (i in itemHolderList) {
         i.name = "Item " + i.name
     }
 
-    return list
+    return itemHolderList
 }
